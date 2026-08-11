@@ -10,5 +10,9 @@ namespace ESportsTournament.Api.Repositories
         Task AtualizarAsync(Torneio torneio);
         Task RemoverAsync(Torneio torneio);
         Task SalvarAlteracoesAsync();
+
+        Task BeginTransactionAsync();
+        Task CommitTransactionAsync();
+        Task RollbackTransactionAsync();
     }
 }
