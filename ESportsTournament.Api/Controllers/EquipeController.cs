@@ -51,8 +51,6 @@ namespace ESportsTournament.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CriarEquipe([FromBody] EquipeCriacaoDto dto)
         {
-            try
-            {
                 var equipeCriada = await _equipeService.CriarEquipeAsync(dto);
 
                 if (equipeCriada == null)
@@ -61,27 +59,12 @@ namespace ESportsTournament.Api.Controllers
                 }
 
                 return Created(string.Empty, equipeCriada);
-            }
-
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { Mensagem = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Mensagem = "Erro interno ao cadastrar a equipe.",
-                    Detalhe = ex.Message
-                });
-            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> ExcluirEquipe(int id)
         {
-            try
-            {
+           
                 var resultado = await _equipeService.ExcluirEquipeAsync(id);
 
                 if (!resultado)
@@ -90,22 +73,12 @@ namespace ESportsTournament.Api.Controllers
                 }
 
                 return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Mensagem = "Erro interno ao excluir a equipe.",
-                    Detalhe = ex.Message
-                });
-            }
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> AtualizarEquipe(int id, [FromBody] EquipeAtualizacaoDto dto)
         {
-            try
-            {
+          
                 var equipeAtualizada = await _equipeService.AtualizarEquipeAsync(id, dto);
 
                 if (equipeAtualizada == null)
@@ -114,21 +87,6 @@ namespace ESportsTournament.Api.Controllers
                 }
 
                 return Ok(equipeAtualizada);
-            }
-
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { Mensagem = ex.Message });
-            }
-
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Mensagem = "Erro interno ao atualizar a equipe.",
-                    Detalhe = ex.Message
-                });
-            }
         }
     }
 }
