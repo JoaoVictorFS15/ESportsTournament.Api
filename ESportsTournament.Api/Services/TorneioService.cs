@@ -1,4 +1,5 @@
-﻿using ESportsTournament.Api.Data;
+﻿using AutoMapper;
+using ESportsTournament.Api.Data;
 using ESportsTournament.Api.DTOs;
 using ESportsTournament.Api.Models;
 using ESportsTournament.Api.Repositories;
@@ -9,9 +10,11 @@ namespace ESportsTournament.Api.Services
     public class TorneioService : ITorneioService
     {
         private readonly ITorneioRepository _repository;
-        public TorneioService(ITorneioRepository repository)
+        private readonly IMapper _mapper;
+        public TorneioService(ITorneioRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
         public async Task<Torneio> CriaTorneioAsync(TorneioCriacaoDto dto)
@@ -19,14 +22,7 @@ namespace ESportsTournament.Api.Services
             await _repository.BeginTransactionAsync();
             try
             {
-                var novoTorneio = new Torneio
-                {
-                    Nome = dto.Nome,
-                    Jogo = dto.Jogo,
-                    DataInicio = dto.DataInicio,
-                    DataFim = dto.DataFim,
-                    Premiacao = dto.Premiacao
-                };
+                var novoTorneio = _mapper.Map<Torneio>(dto);
 
                 // O Repositório adiciona e salva
                 await _repository.AdicionarAsync(novoTorneio);
@@ -48,57 +44,16 @@ namespace ESportsTournament.Api.Services
         {
             var torneios = await _repository.ObterTodosAsync();
 
-            var torneiosDto = torneios.Select(t => new TorneioResponseDto
-            {
-                Id = t.Id,
-                Nome = t.Nome,
-                Jogo = t.Jogo,
-                DataInicio = t.DataInicio,
-                DataFim = t.DataFim,
-                Premiacao = t.Premiacao,
-                Status = t.Status,
-                Equipes = t.Equipes.Select(e => new EquipeResponseDto
-                {
-                    Id = e.Id,
-                    Nome = e.Nome,
-                    TorneioId = e.TorneioId
-                }).ToList()
-
-            });
-
-            return torneiosDto;
+            return _mapper.Map<IEnumerable<TorneioResponseDto>>(torneios);
         }
 
         public async Task<TorneioResponseDto> ObterPorIdAsync(int id)
         {
-            try
-            {
-                var torneio = await _repository.ObterPorIdAsync(id);
+            var torneio = await _repository.ObterPorIdAsync(id);
 
-                if (torneio == null) return null;
+            if (torneio == null) return null;
 
-                return new TorneioResponseDto
-                {
-                    Id = torneio.Id,
-                    Nome = torneio.Nome,
-                    Jogo = torneio.Jogo,
-                    DataInicio = torneio.DataInicio,
-                    DataFim = torneio.DataFim,
-                    Premiacao = torneio.Premiacao,
-                    Status = torneio.Status,
-                    Equipes = torneio.Equipes.Select(e => new EquipeResponseDto
-                    {
-                        Id = e.Id,
-                        Nome = e.Nome,
-                        TorneioId = e.TorneioId
-                    }).ToList()
-                };
-            }
-            catch (Exception e)
-            {
-
-                throw e;
-            }
+            return _mapper.Map<TorneioResponseDto>(torneio);
 
         }
 
@@ -111,12 +66,7 @@ namespace ESportsTournament.Api.Services
                 var torneio = await _repository.ObterPorIdAsync(id);
                 if (torneio == null) return null;
 
-                torneio.Nome = dto.Nome;
-                torneio.Jogo = dto.Jogo;
-                torneio.DataInicio = dto.DataInicio;
-                torneio.DataFim = dto.DataFim;
-                torneio.Premiacao = dto.Premiacao;
-                torneio.Status = dto.Status;
+                _mapper.Map(dto, torneio);
 
                 await _repository.AtualizarAsync(torneio);
                 await _repository.SalvarAlteracoesAsync();
@@ -124,16 +74,7 @@ namespace ESportsTournament.Api.Services
                 // Confirma a transação
                 await _repository.CommitTransactionAsync();
 
-                return new TorneioResponseDto
-                {
-                    Id = torneio.Id,
-                    Nome = torneio.Nome,
-                    Jogo = torneio.Jogo,
-                    DataInicio = torneio.DataInicio,
-                    DataFim = torneio.DataFim,
-                    Premiacao = torneio.Premiacao,
-                    Status = torneio.Status
-                };
+                return _mapper.Map<TorneioResponseDto>(torneio);
             }
             catch (Exception ex)
             {
@@ -141,7 +82,7 @@ namespace ESportsTournament.Api.Services
                 throw new Exception("Ocorreu um erro ao atualizar o torneio no banco de dados.", ex);
             }
         }
-        
+
         public async Task<bool> ExcluirTorneioAsync(int id)
         {
             await _repository.BeginTransactionAsync();
@@ -162,6 +103,6 @@ namespace ESportsTournament.Api.Services
                 throw new Exception("Ocorreu um erro ao excluir o torneio no banco de dados.", ex);
             }
         }
-        
+
     }
 }

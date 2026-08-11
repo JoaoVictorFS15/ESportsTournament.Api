@@ -1,9 +1,11 @@
 using ESportsTournament.Api.Data;
 using ESportsTournament.Api.Middlewares;
+using ESportsTournament.Api.Profiles;
 using ESportsTournament.Api.Repositories;
 using ESportsTournament.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -21,6 +23,7 @@ builder.Services.AddScoped<ITorneioService, TorneioService>();
 builder.Services.AddScoped<IEquipeService, EquipeService>();
 builder.Services.AddScoped<ITorneioRepository, TorneioRepository>();
 builder.Services.AddScoped<IEquipeRepository, EquipeRepository>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<TokenService>();
 
 builder.Services.AddControllers();

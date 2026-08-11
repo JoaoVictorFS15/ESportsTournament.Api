@@ -1,3 +1,4 @@
+using AutoMapper;
 using ESportsTournament.Api.Data;
 using ESportsTournament.Api.DTOs;
 using ESportsTournament.Api.Models;
@@ -9,22 +10,19 @@ namespace ESportsTournament.Api.Services
     {
         private readonly IEquipeRepository _equipeRepository;
         private readonly ITorneioRepository _torneioRepository;
+        private readonly IMapper _mapper;
 
-        public EquipeService(IEquipeRepository equipeRepository, ITorneioRepository torneioRepository)
+        public EquipeService(IEquipeRepository equipeRepository, ITorneioRepository torneioRepository, IMapper mapper)
         {
             _equipeRepository = equipeRepository;
             _torneioRepository = torneioRepository;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<EquipeResponseDto>> ObterTodasAsync()
         {
             var equipes = await _equipeRepository.ObterTodasAsync();
-            return equipes.Select(e => new EquipeResponseDto
-            {
-                Id = e.Id,
-                Nome = e.Nome,
-                TorneioId = e.TorneioId
-            });
+            return _mapper.Map<IEnumerable<EquipeResponseDto>>(equipes);
         }
 
         public async Task<EquipeResponseDto?> ObterPorIdAsync(int id)
@@ -32,23 +30,13 @@ namespace ESportsTournament.Api.Services
             var equipe = await _equipeRepository.ObterPorIdAsync(id);
             if (equipe == null) return null;
 
-            return new EquipeResponseDto
-            {
-                Id = equipe.Id,
-                Nome = equipe.Nome,
-                TorneioId = equipe.TorneioId
-            };
+            return _mapper.Map<EquipeResponseDto>(equipe);
         }
 
         public async Task<IEnumerable<EquipeResponseDto>> ObterPorNomeAsync(string nome)
         {
             var equipes = await _equipeRepository.ObterPorNomeAsync(nome);
-            return equipes.Select(e => new EquipeResponseDto
-            {
-                Id = e.Id,
-                Nome = e.Nome,
-                TorneioId = e.TorneioId
-            });
+            return _mapper.Map<IEnumerable<EquipeResponseDto>>(equipes);
         }
 
         public async Task<EquipeResponseDto> CriarEquipeAsync(EquipeCriacaoDto dto)
@@ -68,22 +56,13 @@ namespace ESportsTournament.Api.Services
                     throw new InvalidOperationException($"Não é possível inscrever a equipe. O torneio selecionado está com status: '{torneio.Status}'.");
                 }
 
-                var novaEquipe = new Equipe
-                {
-                    Nome = dto.Nome,
-                    TorneioId = dto.TorneioId
-                };
+                var novaEquipe = _mapper.Map<Equipe>(dto);
 
                 await _equipeRepository.AdicionarAsync(novaEquipe);
                 await _equipeRepository.SalvarAlteracoesAsync();
                 await _equipeRepository.CommitTransactionAsync();
 
-                return new EquipeResponseDto
-                {
-                    Id = novaEquipe.Id,
-                    Nome = novaEquipe.Nome,
-                    TorneioId = novaEquipe.TorneioId
-                };
+                return _mapper.Map<EquipeResponseDto>(novaEquipe);
             }
             catch (InvalidOperationException)
             {
@@ -144,19 +123,13 @@ namespace ESportsTournament.Api.Services
                     }
                 }
 
-                equipe.Nome = dto.Nome;
-                equipe.TorneioId = dto.TorneioId;
+                _mapper.Map(dto, equipe);
 
                 await _equipeRepository.AtualizarAsync(equipe);
                 await _equipeRepository.SalvarAlteracoesAsync();
                 await _equipeRepository.CommitTransactionAsync();
 
-                return new EquipeResponseDto
-                {
-                    Id = equipe.Id,
-                    Nome = equipe.Nome,
-                    TorneioId = equipe.TorneioId
-                };
+                return _mapper.Map<EquipeResponseDto>(equipe);
             }
             catch (InvalidOperationException)
             {
