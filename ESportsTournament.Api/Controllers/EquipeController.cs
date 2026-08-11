@@ -1,4 +1,4 @@
-﻿using ESportsTournament.Api.DTOs;
+using ESportsTournament.Api.DTOs;
 using ESportsTournament.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +16,36 @@ namespace ESportsTournament.Api.Controllers
         {
             _logger = logger;
             _equipeService = equipeService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObterTodas()
+        {
+            var equipes = await _equipeService.ObterTodasAsync();
+            return Ok(equipes);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> ObterPorId(int id)
+        {
+            var equipe = await _equipeService.ObterPorIdAsync(id);
+            if (equipe == null)
+            {
+                return NotFound(new { Mensagem = "Equipe não encontrada." });
+            }
+            return Ok(equipe);
+        }
+
+        [HttpGet("buscar")]
+        public async Task<IActionResult> ObterPorNome([FromQuery] string nome)
+        {
+            if (string.IsNullOrWhiteSpace(nome))
+            {
+                return BadRequest(new { Mensagem = "O nome para busca não pode ser vazio." });
+            }
+
+            var equipes = await _equipeService.ObterPorNomeAsync(nome);
+            return Ok(equipes);
         }
 
         [HttpPost]

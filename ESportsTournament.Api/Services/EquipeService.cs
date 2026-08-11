@@ -1,22 +1,62 @@
-﻿using ESportsTournament.Api.Data;
+using ESportsTournament.Api.Data;
 using ESportsTournament.Api.DTOs;
 using ESportsTournament.Api.Models;
+using ESportsTournament.Api.Repositories;
 
 namespace ESportsTournament.Api.Services
 {
     public class EquipeService : IEquipeService
     {
-        private readonly AppDbContext _context;
-        public EquipeService(AppDbContext context)
+        private readonly IEquipeRepository _equipeRepository;
+        private readonly ITorneioRepository _torneioRepository;
+
+        public EquipeService(IEquipeRepository equipeRepository, ITorneioRepository torneioRepository)
         {
-            _context = context;
+            _equipeRepository = equipeRepository;
+            _torneioRepository = torneioRepository;
         }
+
+        public async Task<IEnumerable<EquipeResponseDto>> ObterTodasAsync()
+        {
+            var equipes = await _equipeRepository.ObterTodasAsync();
+            return equipes.Select(e => new EquipeResponseDto
+            {
+                Id = e.Id,
+                Nome = e.Nome,
+                TorneioId = e.TorneioId
+            });
+        }
+
+        public async Task<EquipeResponseDto?> ObterPorIdAsync(int id)
+        {
+            var equipe = await _equipeRepository.ObterPorIdAsync(id);
+            if (equipe == null) return null;
+
+            return new EquipeResponseDto
+            {
+                Id = equipe.Id,
+                Nome = equipe.Nome,
+                TorneioId = equipe.TorneioId
+            };
+        }
+
+        public async Task<IEnumerable<EquipeResponseDto>> ObterPorNomeAsync(string nome)
+        {
+            var equipes = await _equipeRepository.ObterPorNomeAsync(nome);
+            return equipes.Select(e => new EquipeResponseDto
+            {
+                Id = e.Id,
+                Nome = e.Nome,
+                TorneioId = e.TorneioId
+            });
+        }
+
         public async Task<EquipeResponseDto> CriarEquipeAsync(EquipeCriacaoDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _equipeRepository.BeginTransactionAsync();
             try
             {
-                var torneio = await _context.Torneios.FindAsync(dto.TorneioId);
+                var torneio = await _torneioRepository.ObterPorIdAsync(dto.TorneioId);
 
                 if (torneio == null)
                 {
@@ -34,9 +74,9 @@ namespace ESportsTournament.Api.Services
                     TorneioId = dto.TorneioId
                 };
 
-                _context.Equipes.Add(novaEquipe);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _equipeRepository.AdicionarAsync(novaEquipe);
+                await _equipeRepository.SalvarAlteracoesAsync();
+                await _equipeRepository.CommitTransactionAsync();
 
                 return new EquipeResponseDto
                 {
@@ -47,52 +87,51 @@ namespace ESportsTournament.Api.Services
             }
             catch (InvalidOperationException)
             {
-                await transaction.RollbackAsync();
+                await _equipeRepository.RollbackTransactionAsync();
                 throw;
             }
-
             catch (Exception ex)
             {
-
-                await transaction.RollbackAsync();
+                await _equipeRepository.RollbackTransactionAsync();
                 throw new Exception("Ocorreu um erro ao criar equipe no banco de dados.", ex);
             }
         }
+
         public async Task<bool> ExcluirEquipeAsync(int id)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _equipeRepository.BeginTransactionAsync();
             try
             {
-                var equipe = await _context.Equipes.FindAsync(id);
+                var equipe = await _equipeRepository.ObterPorIdAsync(id);
                 if (equipe == null)
                 {
                     return false;
                 }
 
-                _context.Equipes.Remove(equipe);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _equipeRepository.RemoverAsync(equipe);
+                await _equipeRepository.SalvarAlteracoesAsync();
+                await _equipeRepository.CommitTransactionAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                await _equipeRepository.RollbackTransactionAsync();
                 throw new Exception("Ocorreu um erro ao excluir a equipe no banco de dados.", ex);
             }
         }
 
         public async Task<EquipeResponseDto> AtualizarEquipeAsync(int id, EquipeAtualizacaoDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _equipeRepository.BeginTransactionAsync();
 
             try
             {
-                var equipe = await _context.Equipes.FindAsync(id);
+                var equipe = await _equipeRepository.ObterPorIdAsync(id);
                 if (equipe == null) return null;
 
                 if (equipe.TorneioId != dto.TorneioId)
                 {
-                    var novoTorneio = await _context.Torneios.FindAsync(dto.TorneioId);
+                    var novoTorneio = await _torneioRepository.ObterPorIdAsync(dto.TorneioId);
 
                     if (novoTorneio == null)
                     {
@@ -108,8 +147,9 @@ namespace ESportsTournament.Api.Services
                 equipe.Nome = dto.Nome;
                 equipe.TorneioId = dto.TorneioId;
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _equipeRepository.AtualizarAsync(equipe);
+                await _equipeRepository.SalvarAlteracoesAsync();
+                await _equipeRepository.CommitTransactionAsync();
 
                 return new EquipeResponseDto
                 {
@@ -120,15 +160,14 @@ namespace ESportsTournament.Api.Services
             }
             catch (InvalidOperationException)
             {
-                await transaction.RollbackAsync();
+                await _equipeRepository.RollbackTransactionAsync();
                 throw;
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                await _equipeRepository.RollbackTransactionAsync();
                 throw new Exception("Ocorreu um erro ao atualizar a equipe no banco de dados.", ex);
             }
         }
-
     }
 }
