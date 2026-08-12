@@ -4,9 +4,8 @@ namespace ESportsTournament.Api.Repositories
 {
     public interface IEquipeRepository
     {
-        Task<List<Equipe>> ObterTodasAsync();
+        Task<(IEnumerable<Equipe> Itens, int Total)> ObterTodasAsync(int pagina, int tamanhoPagina, string? nome = null);
         Task<Equipe?> ObterPorIdAsync(int id);
-        Task<List<Equipe>> ObterPorNomeAsync(string nome);
         
         Task AdicionarAsync(Equipe equipe);
         Task AtualizarAsync(Equipe equipe);

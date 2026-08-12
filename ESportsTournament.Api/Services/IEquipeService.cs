@@ -4,9 +4,8 @@ namespace ESportsTournament.Api.Services
 {
     public interface IEquipeService
     {
-        Task<IEnumerable<EquipeResponseDto>> ObterTodasAsync();
+        Task<PaginacaoResponseDto<EquipeResponseDto>> ObterTodasAsync(int pagina, int tamanhoPagina, string? nome = null);
         Task<EquipeResponseDto?> ObterPorIdAsync(int id);
-        Task<IEnumerable<EquipeResponseDto>> ObterPorNomeAsync(string nome);
 
         Task<EquipeResponseDto> CriarEquipeAsync(EquipeCriacaoDto dto);
         Task<bool> ExcluirEquipeAsync(int id);

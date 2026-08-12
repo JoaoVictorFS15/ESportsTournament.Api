@@ -19,10 +19,20 @@ namespace ESportsTournament.Api.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<EquipeResponseDto>> ObterTodasAsync()
+        public async Task<PaginacaoResponseDto<EquipeResponseDto>> ObterTodasAsync(int pagina, int tamanhoPagina, string? nome = null)
         {
-            var equipes = await _equipeRepository.ObterTodasAsync();
-            return _mapper.Map<IEnumerable<EquipeResponseDto>>(equipes);
+            var resultado = await _equipeRepository.ObterTodasAsync(pagina, tamanhoPagina, nome);
+            var itensDto = _mapper.Map<IEnumerable<EquipeResponseDto>>(resultado.Itens);
+            var totalPaginas = (int)Math.Ceiling(resultado.Total / (double)tamanhoPagina);
+
+            return new PaginacaoResponseDto<EquipeResponseDto>
+            {
+                PaginaAtual = pagina,
+                TamanhoDaPagina = tamanhoPagina,
+                TotalDeItens = resultado.Total,
+                TotalDePaginas = totalPaginas,
+                Itens = itensDto
+            };
         }
 
         public async Task<EquipeResponseDto?> ObterPorIdAsync(int id)
@@ -31,12 +41,6 @@ namespace ESportsTournament.Api.Services
             if (equipe == null) return null;
 
             return _mapper.Map<EquipeResponseDto>(equipe);
-        }
-
-        public async Task<IEnumerable<EquipeResponseDto>> ObterPorNomeAsync(string nome)
-        {
-            var equipes = await _equipeRepository.ObterPorNomeAsync(nome);
-            return _mapper.Map<IEnumerable<EquipeResponseDto>>(equipes);
         }
 
         public async Task<EquipeResponseDto> CriarEquipeAsync(EquipeCriacaoDto dto)

@@ -19,9 +19,13 @@ namespace ESportsTournament.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodas()
+        public async Task<IActionResult> ObterTodas([FromQuery] int pagina = 1, [FromQuery] int tamanhoPagina = 10, [FromQuery] string? nome = null)
         {
-            var equipes = await _equipeService.ObterTodasAsync();
+            if (pagina < 1) pagina = 1;
+            if (tamanhoPagina < 1) tamanhoPagina = 10;
+            if (tamanhoPagina > 50) tamanhoPagina = 50;
+
+            var equipes = await _equipeService.ObterTodasAsync(pagina, tamanhoPagina, nome);
             return Ok(equipes);
         }
 
@@ -36,17 +40,7 @@ namespace ESportsTournament.Api.Controllers
             return Ok(equipe);
         }
 
-        [HttpGet("buscar")]
-        public async Task<IActionResult> ObterPorNome([FromQuery] string nome)
-        {
-            if (string.IsNullOrWhiteSpace(nome))
-            {
-                return BadRequest(new { Mensagem = "O nome para busca não pode ser vazio." });
-            }
 
-            var equipes = await _equipeService.ObterPorNomeAsync(nome);
-            return Ok(equipes);
-        }
 
         [HttpPost]
         public async Task<IActionResult> CriarEquipe([FromBody] EquipeCriacaoDto dto)
