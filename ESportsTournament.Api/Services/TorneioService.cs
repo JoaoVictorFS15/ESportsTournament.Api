@@ -22,6 +22,11 @@ namespace ESportsTournament.Api.Services
             await _repository.BeginTransactionAsync();
             try
             {
+                if (dto.DataFim <= dto.DataInicio)
+                {
+                    throw new InvalidOperationException("A data de término do torneio deve ser posterior à data de início.");
+                }
+
                 var novoTorneio = _mapper.Map<Torneio>(dto);
 
                 // O Repositório adiciona e salva
@@ -30,6 +35,12 @@ namespace ESportsTournament.Api.Services
                 await _repository.CommitTransactionAsync();
 
                 return novoTorneio;
+            }
+
+            catch (InvalidOperationException)
+            {
+                await _repository.RollbackTransactionAsync();
+                throw;
             }
             catch (Exception ex)
             {
@@ -45,7 +56,7 @@ namespace ESportsTournament.Api.Services
             var resultado = await _repository.ObterTodosAsync(pagina, tamanhoPagina, nome);
             var itensDto = _mapper.Map<IEnumerable<TorneioResponseDto>>(resultado.Itens);
             var totalPaginas = (int)Math.Ceiling(resultado.Total / (double)tamanhoPagina);
-            
+
             return new PaginacaoResponseDto<TorneioResponseDto>
             {
                 PaginaAtual = pagina,
@@ -72,6 +83,12 @@ namespace ESportsTournament.Api.Services
 
             try
             {
+
+                if (dto.DataFim <= dto.DataInicio)
+                {
+                    throw new InvalidOperationException("A data de término do torneio deve ser posterior à data de início.");
+                }
+
                 var torneio = await _repository.ObterPorIdAsync(id);
                 if (torneio == null) return null;
 
@@ -85,6 +102,12 @@ namespace ESportsTournament.Api.Services
 
                 return _mapper.Map<TorneioResponseDto>(torneio);
             }
+            catch (InvalidOperationException) 
+            {               
+                await _repository.RollbackTransactionAsync();
+                throw;
+            }
+
             catch (Exception ex)
             {
                 await _repository.RollbackTransactionAsync();
