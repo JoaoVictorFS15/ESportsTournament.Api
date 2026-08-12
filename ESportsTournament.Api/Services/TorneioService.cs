@@ -40,11 +40,20 @@ namespace ESportsTournament.Api.Services
         }
 
 
-        public async Task<IEnumerable<TorneioResponseDto>> ObterTodosAsync()
+        public async Task<PaginacaoResponseDto<TorneioResponseDto>> ObterTodosAsync(int pagina, int tamanhoPagina, string? nome = null)
         {
-            var torneios = await _repository.ObterTodosAsync();
-
-            return _mapper.Map<IEnumerable<TorneioResponseDto>>(torneios);
+            var resultado = await _repository.ObterTodosAsync(pagina, tamanhoPagina, nome);
+            var itensDto = _mapper.Map<IEnumerable<TorneioResponseDto>>(resultado.Itens);
+            var totalPaginas = (int)Math.Ceiling(resultado.Total / (double)tamanhoPagina);
+            
+            return new PaginacaoResponseDto<TorneioResponseDto>
+            {
+                PaginaAtual = pagina,
+                TamanhoDaPagina = tamanhoPagina,
+                TotalDeItens = resultado.Total,
+                TotalDePaginas = totalPaginas,
+                Itens = itensDto
+            };
         }
 
         public async Task<TorneioResponseDto> ObterPorIdAsync(int id)

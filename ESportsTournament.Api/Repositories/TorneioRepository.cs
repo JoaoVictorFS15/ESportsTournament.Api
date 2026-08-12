@@ -15,11 +15,23 @@ namespace ESportsTournament.Api.Repositories
             _context = context;
         }
 
-        public async Task<List<Torneio>> ObterTodosAsync()
+        public async Task<(IEnumerable<Torneio> Itens, int Total)> ObterTodosAsync(int pagina, int tamanhoPagina, string? nome = null)
         {
-            return await _context.Torneios
-                .Include(t => t.Equipes)
-                .ToListAsync();
+            var query = _context.Torneios.Include(t => t.Equipes).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(nome))
+            {
+                query = query.Where(t => t.Nome.Contains(nome));
+            }
+
+            var total = await query.CountAsync();
+
+            var itens = await query
+                        .Skip((pagina - 1) * tamanhoPagina) // Pula os registros das páginas anteriores
+                        .Take(tamanhoPagina) // Pega apenas a quantidade solicitada
+                        .ToListAsync();
+
+            return (itens, total);
         }
 
         public async Task<Torneio> ObterPorIdAsync(int id)

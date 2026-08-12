@@ -7,7 +7,7 @@ namespace ESportsTournament.Api.Services
     {
         Task<Torneio> CriaTorneioAsync(TorneioCriacaoDto dto);
 
-        Task<IEnumerable<TorneioResponseDto>> ObterTodosAsync();
+        Task<PaginacaoResponseDto<TorneioResponseDto>> ObterTodosAsync(int pagina, int tamanhoPagina, string? nome = null);
 
         Task<TorneioResponseDto> ObterPorIdAsync(int id);
 

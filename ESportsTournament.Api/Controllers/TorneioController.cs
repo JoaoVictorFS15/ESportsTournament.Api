@@ -27,11 +27,16 @@ namespace ESportsTournament.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodos()
+        public async Task<IActionResult> ObterTodos([FromQuery] int pagina = 1, [FromQuery] int tamanhoPagina = 10, [FromQuery] string? nome = null)
         {
 
-            var torneios = await _torneioService.ObterTodosAsync();
-            return Ok(torneios);
+            if (pagina < 1) pagina = 1;
+            if (tamanhoPagina < 1) tamanhoPagina = 10;
+            if (tamanhoPagina > 50) tamanhoPagina = 50;
+
+            var torneiosPaginados = await _torneioService.ObterTodosAsync(pagina, tamanhoPagina, nome);
+
+            return Ok(torneiosPaginados);
         }
 
         [HttpGet("{id}")]
