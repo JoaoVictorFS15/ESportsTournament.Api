@@ -10,12 +10,14 @@ namespace ESportsTournament.Api.Services
     {
         private readonly IEquipeRepository _equipeRepository;
         private readonly ITorneioRepository _torneioRepository;
+        private readonly IUsuarioRepository _usuarioRepository;
         private readonly IMapper _mapper;
 
-        public EquipeService(IEquipeRepository equipeRepository, ITorneioRepository torneioRepository, IMapper mapper)
+        public EquipeService(IEquipeRepository equipeRepository, ITorneioRepository torneioRepository, IUsuarioRepository usuarioRepository, IMapper mapper)
         {
             _equipeRepository = equipeRepository;
             _torneioRepository = torneioRepository;
+            _usuarioRepository = usuarioRepository;
             _mapper = mapper;
         }
 
@@ -74,15 +76,13 @@ namespace ESportsTournament.Api.Services
 
                 novaEquipe.CapitaoId = usuarioId;
 
-                // =========================================================================
-                // ATENÇÃO: Mudança de Role do Usuário
-                // Como o cara acabou de criar um time, ele vira 'Capitao'. 
-                // Você vai precisar atualizar a tabela Usuario aqui no futuro!
-                // Algo como: 
-                // var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
-                // usuario.Role = "Capitao";
-                // await _usuarioRepository.AtualizarAsync(usuario);
-                // =========================================================================
+                var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
+                if (usuario != null)
+                {
+                    usuario.Role = "Capitao";
+                    await _usuarioRepository.AtualizarAsync(usuario);
+                }
+
 
                 await _equipeRepository.AdicionarAsync(novaEquipe);
                 await _equipeRepository.SalvarAlteracoesAsync();
@@ -120,14 +120,14 @@ namespace ESportsTournament.Api.Services
 
                 await _equipeRepository.RemoverAsync(equipe);
 
-                // =========================================================================
-                // ATENÇÃO: Mudança de Role do Usuário
-                // Se a equipe for apagada, o usuário volta a ser um "Jogador" comum.
-                // Futuramente adicione a lógica com o UsuarioRepository aqui!
-                // var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
-                // usuario.Role = "Jogador";
-                // await _usuarioRepository.AtualizarAsync(usuario);
-                // =========================================================================
+
+                var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
+                if (usuario != null)
+                {
+                    usuario.Role = "Jogador";
+                    await _usuarioRepository.AtualizarAsync(usuario);
+                }
+
 
                 await _equipeRepository.SalvarAlteracoesAsync();
                 await _equipeRepository.CommitTransactionAsync();
@@ -156,7 +156,7 @@ namespace ESportsTournament.Api.Services
                 var equipe = await _equipeRepository.ObterPorIdAsync(id);
                 if (equipe == null) return null;
 
-                if (equipe.CapitaoId != usuarioId && perfil != "Organizador") 
+                if (equipe.CapitaoId != usuarioId && perfil != "Organizador")
                 {
                     throw new UnauthorizedAccessException("Acesso negado. Apenas o capitão da equipe ou um Organizador podem editá-la.");
                 }

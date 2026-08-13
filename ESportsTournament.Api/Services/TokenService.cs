@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using ESportsTournament.Api.Models;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -8,7 +9,7 @@ namespace ESportsTournament.Api.Services
     public class TokenService
     {
         // Método que vai gerar a string do Token JWT
-        public string GenerateToken(string userEmail, string role, string jwtKey)
+        public string GenerateToken(int usuarioId, string userEmail, string role, string jwtKey)
         {
             // 1. Configura a chave de segurança transformando nossa string em bytes
             var key = Encoding.ASCII.GetBytes(jwtKey);
@@ -16,6 +17,7 @@ namespace ESportsTournament.Api.Services
             // 2. Define o que vai dentro do token (Payload)
             Claim[] claims = new[]
             {
+                new Claim(ClaimTypes.NameIdentifier, usuarioId.ToString()),
                 new Claim(ClaimTypes.Email, userEmail),
                 new Claim(ClaimTypes.Role, role)
             };

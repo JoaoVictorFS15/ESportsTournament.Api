@@ -23,6 +23,7 @@ builder.Services.AddScoped<ITorneioService, TorneioService>();
 builder.Services.AddScoped<IEquipeService, EquipeService>();
 builder.Services.AddScoped<ITorneioRepository, TorneioRepository>();
 builder.Services.AddScoped<IEquipeRepository, EquipeRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<TokenService>();
 

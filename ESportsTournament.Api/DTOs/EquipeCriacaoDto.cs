@@ -12,7 +12,6 @@ namespace ESportsTournament.Api.DTOs
         [StringLength(5, ErrorMessage = "A abreviação pode ter no máximo 5 letras.")]
         public string Abreviacao { get; set; } = string.Empty;
 
-        [Range(1, int.MaxValue, ErrorMessage = "Um ID de torneio válido deve ser fornecido.")]
         public int? TorneioId { get; set; }
     }
 }
