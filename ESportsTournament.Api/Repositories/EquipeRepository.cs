@@ -17,7 +17,7 @@ namespace ESportsTournament.Api.Repositories
 
         public async Task<(IEnumerable<Equipe> Itens, int Total)> ObterTodasAsync(int pagina, int tamanhoPagina, string? nome = null)
         {
-            var query = _context.Equipes.AsQueryable();
+            var query = _context.Equipes.Include(x => x.Capitao).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(nome))
             {
@@ -36,7 +36,9 @@ namespace ESportsTournament.Api.Repositories
 
         public async Task<Equipe?> ObterPorIdAsync(int id)
         {
-            return await _context.Equipes.FindAsync(id);
+            return await _context.Equipes
+                .Include(e => e.Capitao)
+                .FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<Equipe?> ObterEquipePorCapitaoIdAsync(int capitaoId)

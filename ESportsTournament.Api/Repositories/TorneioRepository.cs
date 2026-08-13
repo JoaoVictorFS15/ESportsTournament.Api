@@ -34,7 +34,7 @@ namespace ESportsTournament.Api.Repositories
             return (itens, total);
         }
 
-        public async Task<Torneio> ObterPorIdAsync(int id)
+        public async Task<Torneio> ObterPorIdAsync(int? id)
         {
             return await _context.Torneios
                 .Include(t => t.Equipes)

@@ -9,5 +9,7 @@
         public Torneio? Torneio { get; set; }
 
         public int CapitaoId { get; set; }
+
+        public Usuario? Capitao { get; set; }
     }
 }
