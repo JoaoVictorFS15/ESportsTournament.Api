@@ -2,6 +2,7 @@ using ESportsTournament.Api.DTOs;
 using ESportsTournament.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ESportsTournament.Api.Controllers
 {
@@ -45,42 +46,52 @@ namespace ESportsTournament.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CriarEquipe([FromBody] EquipeCriacaoDto dto)
         {
-                var equipeCriada = await _equipeService.CriarEquipeAsync(dto);
+            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var perfil = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
 
-                if (equipeCriada == null)
-                {
-                    return BadRequest(new { Mensagem = "O torneio informado não existe. Verifique o TorneioId." });
-                }
+            var equipeCriada = await _equipeService.CriarEquipeAsync(dto, usuarioId, perfil);
 
-                return Created(string.Empty, equipeCriada);
+            if (equipeCriada == null)
+            {
+                return BadRequest(new { Mensagem = "Não foi possível criar a equipe. Verifique as regras de negócio." });
+
+            }
+
+            return Created(string.Empty, equipeCriada);
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Organizador,Capitao")]
         public async Task<IActionResult> ExcluirEquipe(int id)
         {
-           
-                var resultado = await _equipeService.ExcluirEquipeAsync(id);
+            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var perfil = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
 
-                if (!resultado)
-                {
-                    return NotFound(new { Mensagem = "Equipe não encontrada." });
-                }
+            var resultado = await _equipeService.ExcluirEquipeAsync(id, usuarioId, perfil);
 
-                return NoContent();
+            if (!resultado)
+            {
+                return NotFound(new { Mensagem = "Equipe não encontrada." });
+            }
+
+            return NoContent();
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Organizador,Capitao")]
         public async Task<IActionResult> AtualizarEquipe(int id, [FromBody] EquipeAtualizacaoDto dto)
         {
-          
-                var equipeAtualizada = await _equipeService.AtualizarEquipeAsync(id, dto);
+            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var perfil = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
 
-                if (equipeAtualizada == null)
-                {
-                    return NotFound(new { Mensagem = "Equipe não encontrada para atualização." });
-                }
+            var equipeAtualizada = await _equipeService.AtualizarEquipeAsync(id, dto, usuarioId, perfil);
 
-                return Ok(equipeAtualizada);
+            if (equipeAtualizada == null)
+            {
+                return NotFound(new { Mensagem = "Equipe não encontrada para atualização." });
+            }
+
+            return Ok(equipeAtualizada);
         }
     }
 }

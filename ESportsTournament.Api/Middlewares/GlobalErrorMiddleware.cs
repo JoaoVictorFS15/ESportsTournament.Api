@@ -40,6 +40,12 @@ namespace ESportsTournament.Api.Middlewares
                 mensagem = exception.Message; // Pega a mensagem exata que escrevemos no Service
             }
 
+            else if (exception is UnauthorizedAccessException)
+            {
+                statusCode = HttpStatusCode.Forbidden; // 403
+                mensagem = exception.Message;
+            }
+
             // Configura a resposta para ser em formato JSON
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;

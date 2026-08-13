@@ -43,24 +43,46 @@ namespace ESportsTournament.Api.Services
             return _mapper.Map<EquipeResponseDto>(equipe);
         }
 
-        public async Task<EquipeResponseDto> CriarEquipeAsync(EquipeCriacaoDto dto)
+        public async Task<EquipeResponseDto> CriarEquipeAsync(EquipeCriacaoDto dto, int usuarioId, string perfil)
         {
             await _equipeRepository.BeginTransactionAsync();
             try
             {
-                var torneio = await _torneioRepository.ObterPorIdAsync(dto.TorneioId);
-
-                if (torneio == null)
+                var equipeExistenteNome = await _equipeRepository.ObterEquipePorNomeCandidatoAsync(dto.Nome);
+                if (equipeExistenteNome != null)
                 {
-                    return null;
+                    throw new InvalidOperationException("Já existe uma equipe com este nome.");
                 }
 
-                if (torneio.Status != "Aberto")
+                var equipeExistenteCapitao = await _equipeRepository.ObterEquipePorCapitaoIdAsync(usuarioId);
+                if (equipeExistenteCapitao != null)
                 {
-                    throw new InvalidOperationException($"Não é possível inscrever a equipe. O torneio selecionado está com status: '{torneio.Status}'.");
+                    throw new InvalidOperationException("Você já é capitão de uma equipe. É permitido gerenciar apenas uma equipe por vez.");
+                }
+
+                if (dto.TorneioId.HasValue)
+                {
+                    var torneio = await _torneioRepository.ObterPorIdAsync(dto.TorneioId.Value);
+                    if (torneio == null)
+                        throw new InvalidOperationException("O torneio informado não existe.");
+
+                    if (torneio.Status != "Aberto")
+                        throw new InvalidOperationException($"O torneio selecionado está com status: '{torneio.Status}'.");
                 }
 
                 var novaEquipe = _mapper.Map<Equipe>(dto);
+
+                novaEquipe.CapitaoId = usuarioId;
+
+                // =========================================================================
+                // ATENÇÃO: Mudança de Role do Usuário
+                // Como o cara acabou de criar um time, ele vira 'Capitao'. 
+                // Você vai precisar atualizar a tabela Usuario aqui no futuro!
+                // Algo como: 
+                // var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
+                // usuario.Role = "Capitao";
+                // await _usuarioRepository.AtualizarAsync(usuario);
+                // =========================================================================
 
                 await _equipeRepository.AdicionarAsync(novaEquipe);
                 await _equipeRepository.SalvarAlteracoesAsync();
@@ -80,7 +102,7 @@ namespace ESportsTournament.Api.Services
             }
         }
 
-        public async Task<bool> ExcluirEquipeAsync(int id)
+        public async Task<bool> ExcluirEquipeAsync(int id, int usuarioId, string perfil)
         {
             await _equipeRepository.BeginTransactionAsync();
             try
@@ -91,11 +113,32 @@ namespace ESportsTournament.Api.Services
                     return false;
                 }
 
+                if (perfil != "Organizador" && equipe.CapitaoId != usuarioId)
+                {
+                    throw new UnauthorizedAccessException("Acesso negado: Você só pode excluir a sua própria equipe.");
+                }
+
                 await _equipeRepository.RemoverAsync(equipe);
+
+                // =========================================================================
+                // ATENÇÃO: Mudança de Role do Usuário
+                // Se a equipe for apagada, o usuário volta a ser um "Jogador" comum.
+                // Futuramente adicione a lógica com o UsuarioRepository aqui!
+                // var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
+                // usuario.Role = "Jogador";
+                // await _usuarioRepository.AtualizarAsync(usuario);
+                // =========================================================================
+
                 await _equipeRepository.SalvarAlteracoesAsync();
                 await _equipeRepository.CommitTransactionAsync();
                 return true;
             }
+            catch (UnauthorizedAccessException)
+            {
+                await _equipeRepository.RollbackTransactionAsync();
+                throw; // Repassa o erro 403 para o Controller
+            }
+
             catch (Exception ex)
             {
                 await _equipeRepository.RollbackTransactionAsync();
@@ -103,14 +146,29 @@ namespace ESportsTournament.Api.Services
             }
         }
 
-        public async Task<EquipeResponseDto> AtualizarEquipeAsync(int id, EquipeAtualizacaoDto dto)
+        public async Task<EquipeResponseDto> AtualizarEquipeAsync(int id, EquipeAtualizacaoDto dto, int usuarioId, string perfil)
         {
             await _equipeRepository.BeginTransactionAsync();
 
             try
             {
+
                 var equipe = await _equipeRepository.ObterPorIdAsync(id);
                 if (equipe == null) return null;
+
+                if (equipe.CapitaoId != usuarioId && perfil != "Organizador") 
+                {
+                    throw new UnauthorizedAccessException("Acesso negado. Apenas o capitão da equipe ou um Organizador podem editá-la.");
+                }
+
+                if (equipe.Nome.ToLower() != dto.Nome.ToLower())
+                {
+                    var equipeExistenteNome = await _equipeRepository.ObterEquipePorNomeCandidatoAsync(dto.Nome);
+                    if (equipeExistenteNome != null)
+                    {
+                        throw new InvalidOperationException("Já existe uma equipe com este nome.");
+                    }
+                }
 
                 if (equipe.TorneioId != dto.TorneioId)
                 {
@@ -134,6 +192,11 @@ namespace ESportsTournament.Api.Services
                 await _equipeRepository.CommitTransactionAsync();
 
                 return _mapper.Map<EquipeResponseDto>(equipe);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                await _equipeRepository.RollbackTransactionAsync();
+                throw;
             }
             catch (InvalidOperationException)
             {

@@ -20,6 +20,7 @@ namespace ESportsTournament.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Organizador")]
         public async Task<IActionResult> CriarTorneio([FromBody] TorneioCriacaoDto dto)
         {
             var torneioCriado = await _torneioService.CriaTorneioAsync(dto);
@@ -52,6 +53,7 @@ namespace ESportsTournament.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Organizador")]
         public async Task<IActionResult> AtualizarTorneio(int id, [FromBody] TorneioAtualizacaoDto dto)
         {
 
@@ -66,6 +68,7 @@ namespace ESportsTournament.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Organizador")]
         public async Task<IActionResult> ExcluirTorneio(int id)
         {
             var sucesso = await _torneioService.ExcluirTorneioAsync(id);

@@ -1,4 +1,5 @@
 using ESportsTournament.Api.DTOs;
+using ESportsTournament.Api.Models;
 
 namespace ESportsTournament.Api.Services
 {
@@ -7,8 +8,8 @@ namespace ESportsTournament.Api.Services
         Task<PaginacaoResponseDto<EquipeResponseDto>> ObterTodasAsync(int pagina, int tamanhoPagina, string? nome = null);
         Task<EquipeResponseDto?> ObterPorIdAsync(int id);
 
-        Task<EquipeResponseDto> CriarEquipeAsync(EquipeCriacaoDto dto);
-        Task<bool> ExcluirEquipeAsync(int id);
-        Task<EquipeResponseDto> AtualizarEquipeAsync(int id, EquipeAtualizacaoDto dto);
+        Task<EquipeResponseDto> CriarEquipeAsync(EquipeCriacaoDto dto, int usuarioId, string perfil);
+        Task<bool> ExcluirEquipeAsync(int id, int usuarioId, string perfil);
+        Task<EquipeResponseDto> AtualizarEquipeAsync(int id, EquipeAtualizacaoDto dto, int usuarioId, string perfil);
     }
 }

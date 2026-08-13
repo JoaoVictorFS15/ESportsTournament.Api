@@ -39,6 +39,15 @@ namespace ESportsTournament.Api.Repositories
             return await _context.Equipes.FindAsync(id);
         }
 
+        public async Task<Equipe?> ObterEquipePorCapitaoIdAsync(int capitaoId)
+        {
+            return await _context.Equipes.FirstOrDefaultAsync(e => e.CapitaoId == capitaoId);
+        }
+        public async Task<Equipe?> ObterEquipePorNomeCandidatoAsync(string nome)
+        {
+            return await _context.Equipes.FirstOrDefaultAsync(e => e.Nome.ToLower() == nome.ToLower());
+        }
+
         public async Task AdicionarAsync(Equipe equipe)
         {
             await _context.Equipes.AddAsync(equipe);

@@ -4,8 +4,10 @@
     {
         public int Id { get; set; }
         public string Nome { get; set; } = string.Empty;
-
-        public int TorneioId { get; set; }
+        public string Abreviacao { get; set; } = string.Empty;
+        public int? TorneioId { get; set; }
         public Torneio? Torneio { get; set; }
+
+        public int CapitaoId { get; set; }
     }
 }
